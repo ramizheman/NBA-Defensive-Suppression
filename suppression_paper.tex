@@ -1,7 +1,8 @@
 \documentclass[11pt]{article}
 
-\usepackage[margin=0.85in]{geometry}
+\usepackage[margin=1in]{geometry}
 \usepackage{amsmath, amsthm, booktabs, graphicx, grffile, float, url}
+\usepackage[hidelinks]{hyperref}
 
 \graphicspath{{./}{figures/}}
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
@@ -402,9 +403,17 @@ Defensive suppression of NBA play types is real net of regression to the mean: s
 
 \textbf{Data.} All play-by-play used in this study is publicly available from the NBA Stats API (\texttt{stats.nba.com}), accessed through the open-source \texttt{nba\_api} Python package. No proprietary or licensed third-party tracking data were required. The analysis dataset consists of 863,752 possession records across 5,234 games (2022--23 through 2025--26, regular season and playoffs).
 
-\textbf{Code.} Replication code, frozen trigger tables, and figure sources are at \url{https://github.com/ramizheman/NBA-Defensive-Suppression}. Ingestion and classification code used to build those tables is available from the author on request.
+\textbf{Code.} Analysis code, frozen trigger tables, and paper materials are available at
+\url{https://github.com/ramizheman/NBA-Defensive-Suppression}.
 
 \textbf{Replication.} Full external replication proceeds in three stages: (1)~prefetch and cache raw API responses; (2)~build the possession-level dataset; (3)~run the analysis pipeline described in Section~3.7. The primary DiD specification requires only a flat possession table with game, team, play type, half, and points columns and does not require graph traversal. To reduce replication burden, possession-level exports, pre-computed holdout trigger tables, and result files for the primary matched-pair specification are available from the author on request.
+
+\section*{AI Disclosure}
+
+Large language models (Claude, Anthropic; Grok, xAI) were used to help write the
+analysis code and draft this paper's text. The author directed the research
+question, supplied and validated the data, and reviewed and edited all results
+and text.
 
 \section*{References}
 
