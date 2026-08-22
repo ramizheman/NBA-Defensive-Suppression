@@ -34,19 +34,19 @@ Expected runtime: a few minutes for the matched-pair scripts (5,000 permutations
 
 | Paper claim | Section | Script | Output |
 |---|---|---|---|
-| 863,752 possessions · 5,234 games · 11,064 triggers | Data, Table 1 | Frozen full-graph extract | `playsheet_validation/rtm_full_graph/rtm_null_full_graph_results.md` · `suppression_triggers_full_graph.csv` |
-| Naive excess +0.625 (H1 gap +0.308) | Results, Table 2 | `_rtm_h1_matched.py` | `rtm_h1_matched_results.md` |
-| Locked excess **+0.408** · triggered 1.305→0.751 · control 1.298→1.153 | Results, Tables 2–4 | `_rtm_h1_matched.py` | `rtm_h1_matched_results.md` |
-| Cluster-robust 95% CI **[0.378, 0.438]** · *p*<0.0002 · 848 games | Inference | `_rtm_cluster_robust.py` | `rtm_cluster_robust_results.md` |
-| Caliper 0.05–0.30: +0.397 to +0.412 | Robustness, Table 3 | `_rtm_h1_matched.py` | `rtm_h1_matched_results.md` |
-| Blowout \|margin\|≤15/20/25: +0.403 / **+0.412** / +0.416 | Robustness, Table 3 | Frozen | `rtm_blowout_filter_results.md` |
-| Continue in 93% of events · ~97–98% of H1 volume · ~5.4 points/trigger | Adaptation | `_response_ladder_ppp.py`, `_h1h2_drop_compare.py` | stdout · `cost_of_ignoring_results.md` |
-| Collapse already on first 5 H2 attempts (0.852) | Adaptation, Table 5 | Frozen | `cost_of_ignoring_results.md` |
-| Initiator swap 68% · drops 0.600 vs 0.639 | Initiator, Table 6 | Frozen | `rs_holdout_25_26/suppression_vs_routing.md` |
-| 1,539 triggers · 1,466 (95.3%) already had a better option · no systematic pivots | Pivots | Frozen | `rs_holdout_25_26/adaptation_vs_generic.csv` |
+| 863,752 possessions · 5,234 games · 11,064 triggers | Data, Table 1 | Frozen full-graph extract | [rtm_null_full_graph_results.md](playsheet_validation/rtm_full_graph/rtm_null_full_graph_results.md) · [suppression_triggers_full_graph.csv](playsheet_validation/rtm_full_graph/suppression_triggers_full_graph.csv) |
+| Naive excess +0.625 (H1 gap +0.308) | Results, Table 2 | `_rtm_h1_matched.py` | [rtm_h1_matched_results.md](playsheet_validation/rtm_full_graph/rtm_h1_matched_results.md) |
+| Locked excess **+0.408** · triggered 1.305→0.751 · control 1.298→1.153 | Results, Tables 2–4 | `_rtm_h1_matched.py` | [rtm_h1_matched_results.md](playsheet_validation/rtm_full_graph/rtm_h1_matched_results.md) |
+| Cluster-robust 95% CI **[0.378, 0.438]** · *p*<0.0002 · 848 games | Inference | `_rtm_cluster_robust.py` | [rtm_cluster_robust_results.md](playsheet_validation/rtm_full_graph/rtm_cluster_robust_results.md) |
+| Caliper 0.05–0.30: +0.397 to +0.412 | Robustness, Table 3 | `_rtm_h1_matched.py` | [rtm_h1_matched_results.md](playsheet_validation/rtm_full_graph/rtm_h1_matched_results.md) |
+| Blowout \|margin\|≤15/20/25: +0.403 / **+0.412** / +0.416 | Robustness, Table 3 | Frozen | [rtm_blowout_filter_results.md](playsheet_validation/rtm_full_graph/rtm_blowout_filter_results.md) |
+| Continue in 93% of events · ~97–98% of H1 volume · ~5.4 points/trigger | Adaptation | `_response_ladder_ppp.py`, `_h1h2_drop_compare.py` | stdout · [cost_of_ignoring_results.md](playsheet_validation/cost_of_ignoring_results.md) |
+| Collapse already on first 5 H2 attempts (0.852) | Adaptation, Table 5 | Frozen | [cost_of_ignoring_results.md](playsheet_validation/cost_of_ignoring_results.md) |
+| Initiator swap 68% · drops 0.600 vs 0.639 | Initiator, Table 6 | Frozen | [suppression_vs_routing.md](playsheet_validation/rs_holdout_25_26/suppression_vs_routing.md) |
+| 1,539 triggers · 1,466 (95.3%) already had a better option · no systematic pivots | Pivots | Frozen | [adaptation_vs_generic.csv](playsheet_validation/rs_holdout_25_26/adaptation_vs_generic.csv) |
 | BEST − continue **+0.445** (PO) / **+0.584** (RS) | Ladder, Table 7 | `_response_ladder_ppp.py` | stdout |
-| Team quadrant (drop vs unrealized gain) | Figure 1 | `_plot_quadrant.py` | `figures/suppression-quadrant.png` |
-| BEST-tier share vs win % | Figure 2 | Frozen figure | `figures/talent-vs-process.png` |
+| Team quadrant (drop vs unrealized gain) | Figure 1 | `_plot_quadrant.py` | [suppression-quadrant.png](figures/suppression-quadrant.png) |
+| BEST-tier share vs win % | Figure 2 | Frozen figure | [talent-vs-process.png](figures/talent-vs-process.png) |
 
 Three numbers that look similar and are not the same:
 
