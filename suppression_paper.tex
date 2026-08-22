@@ -1,0 +1,425 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=0.85in]{geometry}
+\usepackage{amsmath, amsthm, booktabs, graphicx, grffile, float, url}
+
+\graphicspath{{./}{figures/}}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+
+\newtheorem{definition}{Definition}
+
+\title{Suppressed but Unmoved: Defensive Suppression \\ and Failed Offensive Adaptation in the NBA}
+\author{Rami Zheman \\ Independent Researcher, Alexandria, VA}
+\date{August 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+A coach watches a play that was working suddenly stop working. Execution? Random variation? Or has the defense taken it away? Coaches talk constantly about adjustments, yet NBA offenses rarely make them. More than nine times in ten, teams keep calling the same play at nearly the same rate after it breaks down. This paper argues that in many cases the defense has already won, and continuing the play is a costly mistake.
+
+Using 863{,}752 NBA possessions from 2022--23 through 2025--26, this paper studies \emph{defensive suppression}: the within-game collapse of a previously successful play type. It asks whether suppression is real beyond regression to the mean, whether offenses adapt once it occurs, and whether better same-game alternatives already exist.
+
+Because plays enter the sample after unusually strong first-half performance, raw before-and-after comparisons are biased. This paper corrects for that with a same-game matched design, pairing suppressed plays with comparable instances of the same play type. Suppression remains significant after correction, cutting scoring by about 0.41 points per possession relative to matched controls, and this holds across robustness checks.
+
+Teams keep running suppressed plays in 93\% of events, at volumes nearly identical to first-half usage. This isn't caution while gathering evidence: the decline appears within a few attempts, swapping the initiator doesn't help, and offenses don't shift toward better options already available.
+
+A matchup-based ranking built from first-half information alone identifies better options, beating continuation by roughly half a point per possession in held-out data.
+\end{abstract}
+
+\section{Introduction}
+
+NBA offenses regularly keep running a play type after a defense has taken it away. Over the course of a game, a defense will adjust its coverage so that an action producing efficient offense in the first half no longer does in the second---and yet the offense, more often than not, continues calling that same action rather than shifting to something the defense has left available. This behavior is difficult to see with the tools most commonly applied to basketball analytics. Aggregate season- and game-level statistics collapse a game into summary rates, and in doing so they discard the very structure that makes this phenomenon visible: it is a within-game, sequence-level effect, in which what a defense did to a play type in one stretch shapes what happens when the offense returns to it. Pooled across a game or a season, the mid-game collapse of a single action disappears into an average.
+
+Most basketball analytics treats possessions, players, lineups, or whole games as the unit of analysis. We instead study \emph{play-type trajectories within games}: the object of interest is a $(\text{team}, \text{game}, \text{play type})$ tuple observed across time---first half versus second half, and the offensive responses available within the same contest. Existing work often treats possessions as exchangeable draws for estimating aggregate efficiency. Preserving that within-game structure---each possession linked to its game, half, team, play type, and initiator---is what makes suppression and adaptation visible as evolving relationships rather than season-level averages. The primary estimator aggregates to half-level play-type summaries and is reproducible from any equivalent possession-level dataset (Section~\ref{sec:methods}).
+
+This paper's contribution is empirical, not architectural. Three findings follow. First, defensive suppression---the mid-game decline of a play type's efficiency beyond ordinary variation---is real after accounting for regression to the mean and other same-game confounds. Second, offenses overwhelmingly fail to adapt: they continue running the suppressed play at nearly undiminished volume, even when a higher-scoring alternative already exists within the same game. Third, matchup-ranked same-game counters, validated out of sample, recover efficiency and substantially outperform continuation. A matched-pair difference-in-differences design separates the first claim from regression to the mean; the operational trigger that flags candidate events is only the definition that makes those tests possible, not the contribution itself.
+
+Measuring the first of these claims is harder than it appears, and the difficulty is worth stating at the outset. A play type is flagged as suppressed precisely because its efficiency fell---which means it was, by construction, performing unusually well beforehand. Anything performing unusually well tends to regress toward its typical level regardless of what the defense does. A naive comparison of a suppressed play's decline therefore conflates genuine defensive suppression with ordinary regression to the mean, and cannot, on its own, tell the two apart. Separating them requires a design that holds the pre-decline level fixed across a suitable comparison; we develop that design in Section~\ref{sec:methods}.
+
+The practical stakes are concrete but bounded. If defensive suppression is real, common, and costly, and if the information needed to respond to it is already present within the same game, then a coaching staff able to recognize a running collapse while second-half possessions remain---and to see which counters have historically survived the relevant matchup---would have decision support at the moment it matters. These results are diagnostic: they measure a recurring inefficiency and rank available counters, but they do not observe teams executing those counters as live interventions, and they make no causal claim about why a given defense adapted. What they offer is measurement, not proof of a remedy.
+
+The remainder of the paper proceeds as follows. Section~\ref{sec:related} relates the approach to prior work. Section~\ref{sec:methods} describes the data, the play-type classification and its calibration, the suppression-trigger definition, and the matched-pair identification strategy that separates defensive suppression from regression to the mean, together with the robustness checks applied to it. Section~\ref{sec:results} reports the three findings and the team-level heterogeneity around them. Section~\ref{sec:discussion} synthesizes the findings, states what the results can and cannot establish, and outlines directions for future work. Section~\ref{sec:conclusion} concludes.
+
+\section{Related Work}
+\label{sec:related}
+
+Basketball analytics has largely been built on aggregate, possession-normalized measurement. The possession as the unit of efficiency, and points per possession as its currency, were formalized in the foundational performance-analysis literature [Oliver 2004; Kubatko et al.\ 2007], which established the offensive and defensive rating framework and the ``four factors'' decomposition that underlie nearly all modern team evaluation. Our efficiency metric inherits its possession-counting basis directly from this line of work. What that framework does not attempt, and does not need to attempt, is to resolve efficiency \emph{within} a game at the level of a specific action over time: its unit is the game or the season, and a play type's mid-game collapse is averaged away by construction.
+
+A second line of work estimates player value across games by adjusting for context. Regularized adjusted plus-minus and its relatives [Sill 2010] regress margin or efficiency onto on-court indicators, using regularization and out-of-sample validation to produce stable cross-game player ratings. These methods answer a different question from ours---the aggregate, season-scale contribution of a player---and operate at the level of lineups and games rather than sequential possessions of a given action. They are complementary to, not competing with, a within-game account of defensive suppression.
+
+Closest to the present work in spirit is the tracking-data literature on continuous possession valuation, most prominently expected possession value [Cervone et al.], which models the evolving value of a possession from spatiotemporal player-tracking data and can value individual decisions in real time. That work and ours share the premise that possession-level, sequence-aware modeling recovers signal that aggregates discard. They differ in two respects that define our contribution. First, expected possession value depends on proprietary optical-tracking data; our analysis uses public play-by-play, which broadens applicability at the cost of spatial detail. Second, expected possession value is a continuous valuation of decisions as they occur, whereas we ask a discrete question---whether mid-game play-type suppression is real after correcting for regression to the mean, and whether offenses adapt when it occurs.
+
+Two additional lines of work are closer in spirit to the specific adaptation question we study. Within basketball, Csap\'o and Raab (2014) and Kondur and Shen (2026) show that NBA defenders adjust coverage intensity in real time in response to a shooter's recent make/miss history, with tightening asymmetric to makes versus misses and concentrated in short recency windows. This is genuine within-game defensive adaptation, but it operates at the level of individual shots rather than a labeled play type tracked across game halves, and it does not employ a matched-pair or difference-in-differences design to separate the effect from regression to the mean. In soccer, Skripnikov et al.\ (2026) use generalized additive mixed-effects models on minute-by-minute match data to show that teams adjust offensive output (shots, expected goals) in response to score state---trailing teams attack more, leading teams defend more conservatively. This documents offensive adaptation to game context, but at the cross-game, team-season level rather than within a single game's play-type trajectory. Closer to our data domain, Borrega-Solano et al.\ (2026) analyze NBA play-type usage and efficiency (PPP) at the team-season level via principal component and mixed-effects models, but do not track how a given play type's efficiency evolves within a single game. None of these lines combine a within-game timescale, play-type-level granularity, and an explicit regression-to-the-mean correction with a measure of offensive response---the combination this paper addresses.
+
+Our contribution is positioned accordingly. The analytical unit is the within-game play-type trajectory, not the season-pooled possession; the statistical engine is matched-pair difference-in-differences on aggregated half-level summaries. We operate at the within-game, possession-sequence level, like the tracking-based valuation literature, but from public play-by-play, like the aggregate-rating tradition. We do not claim priority over or improvement upon these approaches; they address distinct questions and rest on different data. What is, to our knowledge, not jointly addressed by the existing lines above is whether mid-game play-type collapses survive a regression-to-the-mean correction, and whether offenses adapt when they occur---which is the gap this paper fills.
+
+\section{Methods}
+\label{sec:methods}
+
+\subsection{Data}
+
+All analyses draw on a possession-level dataset covering the 2022--23 through 2025--26 NBA seasons, regular season and playoffs combined. The dataset contains 863,752 classified possessions across 5,234 games and 30 teams. Each possession record carries the offensive team, an inferred play type, points scored, period, pre-possession score margin, and primary initiator; score margin is populated on all classified possessions. Points per possession (PPP) is the primary efficiency metric throughout; all reported averages are arithmetic row-means (each qualifying unit contributes one equally weighted row), never possession-weighted pooled means.
+
+Unlike a flat possession table, the analysis dataset retains relationships among possessions, players, play types, and game context. The suppression estimator itself, however, operates on aggregated half-level summaries and can be reproduced from any equivalent possession-level table with game, team, play type, half, and points.
+
+\textbf{Raw data source.} Play-by-play was retrieved from the public NBA Stats API using the open-source \texttt{nba\_api} Python package (v1.11+). For each game we pull \texttt{playbyplayv3} (primary feed; \texttt{playbyplayv2} as fallback), \texttt{boxscoresummaryv2}, \texttt{boxscoretraditionalv2}, and \texttt{gamerotation}. No proprietary tracking, Synergy, or Second Spectrum data were used. Game lists span all regular-season and playoff contests in the four-season window; game identifiers follow the standard NBA format (e.g.\ \texttt{0022400001} for regular season, \texttt{0042400401} for playoffs).
+
+\textbf{Possession construction.} Raw API responses are normalized to a canonical event schema, segmented into possessions by rule-based boundary detection, enriched with lineup and game-state metadata, and labeled with a play type by a priority-ordered inferrer followed by PNR calibration. The pipeline is fully deterministic: given identical cached play-by-play and code version, every possession receives the same label. Possessions are written into the graph with edges linking each record to its game, team, initiator, lineups, and temporal successors; counter-tier ranking in the adaptation analyses draws on this structure, but the matched-pair DiD identification strategy does not. No large language model or stochastic component enters ingestion or classification.
+
+\textbf{Analytic samples.} The primary defensive-suppression sample is the full dataset (11,064 triggers; Table~\ref{tab:dataset}). Adaptation and counter-ranking results are evaluated on two held-out cohorts that were not used to tune the classifier or the matched-pair caliper: (i)~55 playoff series spanning 2022--23 through 2025--26 (272 games, 633 triggers) and (ii)~the 2025--26 regular season (1,148 games, 2,779 triggers). Counter tiers (BEST, SECOND, LOWER, AVOID) are assigned by a deterministic matchup-ranking pipeline that scores feasible counter play types from pre-game team distributions and in-game observed efficiency; tier labels are frozen before H2 outcomes are measured.
+
+\subsection{Possession classification and PNR calibration}
+
+Play types are inferred from play-by-play (PBP) event streams rather than read from a labeled feed. The inferred taxonomy includes PNR, SPOT\_UP, DRIVE, PULL\_UP, POST\_UP, CUT, TRANSITION, PUTBACK, and an OTHER fallback.
+
+Pick-and-roll (PNR) requires a dedicated calibration pass. The NBA V3 PBP feed systematically under-labels it: assist flags appear only on made shots, and screen or pick language never appears in the V3 description text, so a PNR ball-handler who misses, or who scores unassisted off a screen, is never captured by the inferrer's PNR rules. Left uncorrected, inferred PNR runs near 4 percent of possessions against a true rate of roughly 20--25 percent. The calibration corrects this at ingest time, before possessions are written to the dataset, by promoting eligible PULL\_UP and OTHER possessions to PNR up to a per-team target derived from a team's reference PNR shot-share scaled by a factor of 2.5, capped at 33 percent of half-court possessions. Promotion is scored (player historical PNR frequency times a confidence-based prior), applied independently within each half to preserve intra-game asymmetry, and bounded so that no more than half of a given bucket's PULL\_UP possessions are drained in one pass. Because calibration mutates the stored play type, it is upstream of all downstream trigger computation; it is not a pregame-only or report-time adjustment.
+
+We did not have access to proprietary tracking or Synergy possession labels, so classifier accuracy was checked against published tracking benchmarks and internal consistency tests rather than a manually coded gold standard. On the full ingested dataset, post-calibration league shares fall within published Synergy/ESPN bands for the principal half-court types: PNR 24.7\% (benchmark 20--28\%), SPOT\_UP 19.4\% (18--26\%), DRIVE 15.8\% (8--14\%), and POST\_UP 6.5\% (6--10\%); PNR efficiency is 0.948 PPP (benchmark 0.85--1.05). A separate player-level audit of 16 high-usage stars across four seasons (70 player-season cells with sufficient sample) placed post-calibration PNR rates within predefined archetype bands in 64 cells and outside in six. Team-level PNR ranking after calibration preserves face validity (high-volume ball-screen teams such as IND rank above low-PNR teams such as OKC and BOS). A known failure mode is that possession-ending fouls are often coded as OTHER rather than the initiating action; a backward attribution audit recovers the prior play type on 98.6\% of foul-ending OTHER possessions, and re-attributing them shifts play-type PPP by at most 0.007 with no change in play-type ranking. Suppression triggers exclude TRANSITION, PUTBACK, and OTHER, so mis-bucketing in the OTHER bucket does not directly enter the trigger definition. These checks support population-level plausibility but do not constitute possession-by-possession ground-truth validation; that limitation is discussed in Section~\ref{sec:discussion}.
+
+\subsection{Notation and the suppression trigger}
+
+The fundamental unit of analysis is a play-type trajectory within a game: team $t$'s use of play type $p$ in game $g$, tracked from the first half to the second. Let a possession belong to team $t$ (offense), game $g$, and play type $p$.
+Periods 1--2 constitute the first half (H1) and periods 3--4 the second half
+(H2); overtime periods are excluded from both. For each $(t,p,g)$ let
+$n_1(t,p,g)$ and $n_2(t,p,g)$ be the number of half-court possessions of type
+$p$ run by $t$ in each half, and let
+%
+\begin{equation}
+\mathrm{PPP}_h(t,p,g) \;=\; \frac{1}{n_h(t,p,g)}
+  \sum_{i \in \mathcal{P}_h(t,p,g)} \mathrm{ppp}_i,
+  \qquad h \in \{1,2\},
+\end{equation}
+%
+be the mean points per possession over that half's possession set
+$\mathcal{P}_h$.
+
+\begin{definition}[Suppression trigger]
+A play type $p$ run by team $t$ in game $g$ is a \emph{suppression trigger} if
+\begin{equation}
+n_1(t,p,g) \geq 5, \qquad
+n_2(t,p,g) \geq 5, \qquad
+\mathrm{PPP}_1(t,p,g) - \mathrm{PPP}_2(t,p,g) \geq 0.25 .
+\end{equation}
+\end{definition}
+
+The first two conditions ensure both halves are estimable; the third requires a first-to-second-half efficiency decline of at least 0.25 PPP. Applied to the dataset, this yields the counts in Table~\ref{tab:dataset}.
+
+The primary estimator is retrospective: a unit enters the trigger sample only after both halves have enough possessions of play type $p$ for $\mathrm{PPP}_1$ and $\mathrm{PPP}_2$ to be compared. Section~\ref{sec:results} additionally shows that the drop this comparison detects is not concentrated late in the second half---it is already present in a team's first five second-half attempts of the suppressed play type---so the half-level comparison is not obscuring a phenomenon that only emerges near the end of the half.
+
+\begin{table}[t]
+\centering
+\caption{Dataset and trigger summary.}
+\label{tab:dataset}
+\begin{tabular}{ll}
+\toprule
+Quantity & Value \\
+\midrule
+Possessions & 863,752 \\
+Games & 5,234 \\
+Seasons & 2022--23 to 2025--26 (RS + PO) \\
+Suppression triggers & 11,064 (RS 10,418; PO 646) \\
+Trigger rule & $n_1, n_2 \geq 5$; $\mathrm{PPP}_1 - \mathrm{PPP}_2 \geq 0.25$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Matched-pair identification}
+
+The central identification problem is regression to the mean. A unit qualifies as a trigger precisely because its second-half efficiency fell, which means its first-half efficiency was elevated by construction; higher first-half levels regress more strongly regardless of any defensive adjustment. A naive comparison therefore attributes ordinary mean reversion to defensive suppression.
+
+For a triggered unit $T=(t,p,g)$, the control $C=(t',p,g)$ is the opposing team
+$t'$ in the same game running the same play type, subject to the symmetric
+sample floors $n_1(C)\geq5$ and $n_2(C)\geq5$. Define each unit's drop and the
+pairwise difference-in-differences (the \emph{excess}):
+%
+\begin{equation}
+\begin{split}
+D(U) &= \mathrm{PPP}_1(U) - \mathrm{PPP}_2(U), \\
+\Delta_i &= D(T_i) - D(C_i) \\
+&= \bigl[\mathrm{PPP}_1(T_i) - \mathrm{PPP}_2(T_i)\bigr] \\
+&\quad - \bigl[\mathrm{PPP}_1(C_i) - \mathrm{PPP}_2(C_i)\bigr].
+\end{split}
+\end{equation}
+%
+The estimator is the pair mean
+%
+\begin{equation}
+\hat{\Delta} = \frac{1}{N} \sum_{i=1}^{N} \Delta_i .
+\end{equation}
+%
+A pair is retained only if the two units are matched on first-half level:
+%
+\begin{equation}
+\bigl|\, \mathrm{PPP}_1(T_i) - \mathrm{PPP}_1(C_i) \,\bigr| \;\leq\; c,
+\qquad c = 0.10 \ \text{(primary)} .
+\end{equation}
+%
+The naive and corrected estimators are identical in form and differ only in the
+retained pair set: $\hat{\Delta}_{\mathrm{naive}}$ imposes only $n_1(C)\geq5$
+with no caliper ($c=\infty$), whereas $\hat{\Delta}_{\mathrm{corrected}}$
+imposes $c=0.10$ and $n_2(C)\geq5$.
+
+\subsection{Inference}
+
+Let clusters be indexed by game, $g = 1, \dots, G$, with residuals
+$r_i = \Delta_i - \hat{\Delta}$ and per-cluster residual sums
+$S_g = \sum_{i \in g} r_i$. The CR1 cluster-robust variance of the mean is
+%
+\begin{equation}
+\widehat{\mathrm{Var}}(\hat{\Delta})
+  \;=\; \frac{G}{G-1} \cdot \frac{1}{N^{2}} \sum_{g=1}^{G} S_g^{2},
+\qquad
+\mathrm{SE} = \sqrt{\widehat{\mathrm{Var}}(\hat{\Delta})},
+\end{equation}
+%
+with the 95\% interval $\hat{\Delta} \pm t_{0.975,\,G-1}\,\mathrm{SE}$. The design
+effect and effective sample size are
+%
+\begin{equation}
+\mathrm{DEFF} = \left(
+  \frac{\mathrm{SE}_{\mathrm{cluster}}}{\mathrm{SE}_{\mathrm{iid}}}
+\right)^{2},
+\qquad
+n_{\mathrm{eff}} = \frac{N}{\mathrm{DEFF}} .
+\end{equation}
+%
+Under $H_0 : \mathbb{E}[\Delta_i] = 0$, the signs of $\Delta_i$ are exchangeable
+at the cluster level. For each of $B = 5{,}000$ permutations we draw an
+independent sign $s_g \in \{-1, +1\}$ with equal probability per cluster, apply
+it to all pairs in that cluster, and recompute
+$\hat{\Delta}^{(b)} = \frac{1}{N} \sum_{i} s_{g(i)} \Delta_i$. The one-sided
+$p$-value is
+%
+\begin{equation}
+p = \frac{1}{B} \sum_{b=1}^{B}
+  \mathbf{1}\!\left[ \hat{\Delta}^{(b)} \geq \hat{\Delta} \right].
+\end{equation}
+
+\subsection{Robustness checks}
+
+The locked specification was re-estimated under a caliper sweep ($c$ from 0.05 to 0.30), garbage-time exclusion of second-half possessions with absolute score margin above 15, 20, and 25 points, game-level clustering, and correction of the half boundary to exclude overtime from both halves. Results appear in Table~\ref{tab:robustness}.
+
+\subsection{Computational reproducibility}
+
+Every possession in the dataset is produced by the deterministic ingestion pipeline described above; every play-type label follows the documented rule set in the classifier; every suppression trigger is a fixed function of half-level aggregates over possession fields (Definition~1). Reported tables are generated automatically from the possession-level data or from pre-computed trigger tables derived from it. The matched-pair DiD estimates (Tables~\ref{tab:naive-corrected}--\ref{tab:components}) regenerate from half-level $(\text{team}, \text{game}, \text{play type})$ summaries---the same quantities obtainable from any equivalent possession-level relational dataset; adaptation results (initiator swap, pivot rates, response ladder) regenerate from holdout trigger tables and the corresponding summarization routines. A researcher with the same cached play-by-play inputs and code version will obtain identical possession labels and, given an equivalent possession-level export, identical trigger counts and DiD estimates. External replication requires rebuilding the dataset from public API data (approximately 5,200 games) or obtaining a possession-level export; see Section~\ref{sec:data-availability}.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Defensive suppression exceeds regression to the mean}
+
+On the first-half-balanced matched-pair design (caliper $c=0.10$, symmetric sample floors), the excess is $+0.408$ PPP (cluster-robust 95\% CI $[0.378, 0.438]$; $N=1{,}136$ pairs across $G=848$ game clusters; permutation $p<0.0002$). Triggered teams declined from 1.305 PPP in the first half to 0.751 in the second, while their matched controls declined from 1.298 to 1.153 (Table~\ref{tab:components}). A play type identified as suppressed thus loses about 0.41 PPP more into the second half than a comparable control, after netting out regression to the mean. The naive estimator, by contrast, returns $+0.625$ PPP on 9,111 pairs with a first-half imbalance of $+0.308$ PPP (Table~\ref{tab:naive-corrected}); balancing on first-half level collapses that imbalance to $+0.007$ PPP and the estimate to $+0.408$.
+
+The estimate is stable across every robustness condition (Table~\ref{tab:robustness}): it ranges only from $+0.397$ to $+0.412$ across the caliper sweep, equals $+0.403$ / $+0.412$ / $+0.416$ under garbage-time exclusion, is left effectively unchanged by game-level clustering (design effect $\approx 1.0$), and shifts by less than the confidence-interval half-width when overtime is excluded from the half definition. This result is associative: the matched pair removes regression to the mean and same-game confounds but does not identify the defensive mechanism.
+
+\begin{table}[t]
+\centering
+\caption{Matched-pair difference-in-differences---naive vs.\ corrected. Excess is $\hat{\Delta}$ in PPP; CI is cluster-robust on game; $p$ is the cluster-level permutation $p$-value. $N$ = matched pairs; $G$ = game clusters; $n_2(C)\geq5$ = control second-half sample floor.}
+\label{tab:naive-corrected}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}lcccccccc@{}}
+\toprule
+Estimator & $c$ & $n_2(C)$ & $N$ & $G$ & H1 gap & Excess & 95\% CI & $p$ \\
+\midrule
+Naive & $\infty$ & no & 9,111 & 4,342 & $+0.308$ & $+0.625$ & $[0.611,\ 0.639]$ & $<0.0002$ \\
+\textbf{Corrected} & \textbf{0.10} & \textbf{yes} & \textbf{1,136} & \textbf{848} & \textbf{$+0.007$} & \textbf{$+0.408$} & \textbf{$[0.378,\ 0.438]$} & \textbf{$<0.0002$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Robustness of the corrected estimate. Caliper sweep and garbage-time exclusion; all rows retain $n_2(C)\geq5$ and overtime exclusion.}
+\label{tab:robustness}
+\begin{tabular}{lcc}
+\toprule
+Condition & Excess $\hat{\Delta}$ & 95\% CI \\
+\midrule
+Caliper 0.05                    & $+0.403$ & $[0.362,\ 0.445]$ \\
+Caliper 0.10 (primary)          & $+0.408$ & $[0.378,\ 0.438]$ \\
+Caliper 0.15                    & $+0.397$ & $[0.373,\ 0.421]$ \\
+Caliper 0.20                    & $+0.398$ & $[0.377,\ 0.418]$ \\
+Caliper 0.30                    & $+0.412$ & $[0.395,\ 0.429]$ \\
+\midrule
+Blowout $|\text{margin}|\leq15$ & $+0.403$ & $[0.370,\ 0.437]$ \\
+Blowout $|\text{margin}|\leq20$ & $+0.412$ & $[0.380,\ 0.443]$ \\
+Blowout $|\text{margin}|\leq25$ & $+0.416$ & $[0.385,\ 0.448]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Component half efficiencies at the primary specification ($c=0.10$).}
+\label{tab:components}
+\begin{tabular}{lccc}
+\toprule
+Unit & $\mathrm{PPP}_1$ & $\mathrm{PPP}_2$ & Drop $D$ \\
+\midrule
+Triggered & 1.305 & 0.751 & $-0.554$ \\
+Control & 1.298 & 1.153 & $-0.145$ \\
+Difference ($\hat{\Delta}$) & & & $+0.408$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Teams do not effectively adapt}
+
+Offenses continue running the suppressed play type at nearly undiminished volume: 97 percent (playoffs) and 98 percent (regular season) of first-half volume on the suppressed action carries into the second half, and teams keep running the play in 93 percent of defensive suppression events. Continuing costs a per-trigger mean of 0.63 PPP relative to the first half, or roughly 5.4 points per trigger in the playoffs and 5.5 in the regular season; this cost is insensitive to the first-half efficiency floor used in the continuation analysis (regular-season cost moves 5.70 to 5.55 when the floor is removed).
+
+A natural concern about a half-level comparison is that the drop might be concentrated late in the second half---driven by a handful of garbage-time or fatigue-affected possessions---rather than present across the half. Ranking every continued second-half attempt of the suppressed play type by its order within H2 rules this out (Table~\ref{tab:overtime-table}): PPP on the suppressed action is already 0.852 in the team's first five second-half attempts of that play type, essentially unchanged from the 0.907 seen in its eleventh-plus attempt. The collapse is present from the start of the second half and does not compound or concentrate toward the end of it.
+
+\begin{table}[t]
+\centering
+\caption{PPP on the suppressed play type by order of attempt within the second half, pooled over 683 continued triggers (regular season and playoffs combined).}
+\label{tab:overtime-table}
+\begin{tabular}{lccc}
+\toprule
+H2 attempt \# of suppressed play & Mean PPP & vs.\ H1 baseline (1.522) & $n$ \\
+\midrule
+1st--5th & 0.852 & $-0.670$ & 3,295 \\
+6th--10th & 0.952 & $-0.570$ & 1,897 \\
+11th+ & 0.907 & $-0.615$ & 440 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Substituting the initiating player does not recover efficiency (Table~\ref{tab:initiator}). Among 2,557 classified regular-season triggers, 68 percent ($n=1{,}732$) swapped the primary initiator and 32 percent ($n=825$) retained it; the retained group dropped 0.600 and the swapped group dropped 0.639. The swap-minus-retain difference is $+0.039$ PPP ($p=0.002$, Cohen's $d=0.12$)---a negligible effect: distinguishable from zero on this sample but far too small to constitute recovery, and directionally opposite to adaptation. The second-half collapse is therefore a property of the play type under the deployed defense, not of the individual initiator. These analyses use held-out regular-season and playoff cohorts and row-mean PPP per trigger.
+
+\begin{table}[t]
+\centering
+\caption{Non-recovery via initiator substitution (2025--26 RS).}
+\label{tab:initiator}
+\begin{tabular}{lcc}
+\toprule
+Group & $n$ & Drop $D$ \\
+\midrule
+Same primary initiator & 825 & 0.600 \\
+Swapped primary initiator & 1,732 & 0.639 \\
+Swap $-$ same & & $+0.039$ ($p=0.002$, $d=0.12$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{No systematic pivots occur even when a superior option existed}
+
+Across 1,539 analyzed triggers, 1,466 (95.3 percent) had a higher-scoring play type already available within the same game, yet no team systematically shifted volume away from the suppressed play toward the superior one (zero significant pivots). The failure to adapt is not attributable to the absence of a viable alternative: the alternative existed and went unused. This analysis uses the held-out regular-season cohort with row-mean PPP per trigger.
+
+\subsection{Counters outperform continuation}
+\label{sec:ladder-section}
+
+The cost figures above measure decline relative to the play type's own first-half performance---they quantify how much worse the suppressed action became ($\approx 5.4$ points per trigger, over a whole-half sample where teams ran the play roughly eight times in each half), not what an alternative would have been worth. A separate question is what teams forgo by not switching: the matchup-ranked best counter outperforms continuation by $+0.445$ PPP (playoffs) and $+0.584$ (regular season). Applying that per-possession gap to a typical whole-half continuation volume of roughly eight possessions gives an illustrative $3.6$--$4.7$ additional points per trigger---an opportunity-cost scaling, not a measurement of any single set of possessions, since the cost figure and the counter-gap figure come from the same trigger table but the eight-possession volume and the counter PPP are never observed jointly on the identical possessions.
+
+On the response ladder (Table~\ref{tab:ladder}), continuing the suppressed play scores 0.853 PPP (playoffs) and 0.839 (regular season). Every counter tier exceeds continuation, and the matchup-ranked best counter scores 1.298 and 1.423. The primary quantity---best counter versus continuation---is $+0.445$ PPP (playoffs) and $+0.584$ (regular season). As a distinct tier-validation statistic, the gap between the best and worst counter tiers is $+0.375$ (playoffs) and $+0.422$ (regular season); this measures whether the ranking separates good counters from bad and is not the same as the best-versus-continuation quantity.
+
+The essential caveat is that continuation PPP and counter PPP are measured on different possessions within the same game, not on a paired counterfactual. This is an opportunity-cost comparison; it does not establish that a team executing the counter would have realized the observed counter efficiency.
+
+\begin{table}[t]
+\centering
+\caption{Response ladder (row-mean PPP).}
+\label{tab:ladder}
+\begin{tabular}{lcc}
+\toprule
+Response & Playoffs & Regular season \\
+\midrule
+Continue suppressed play & 0.853 & 0.839 \\
+Worst counter (AVOID) & 0.923 & 1.001 \\
+Best counter (BEST) & 1.298 & 1.423 \\
+\textbf{BEST $-$ continue (primary)} & \textbf{$+0.445$} & \textbf{$+0.584$} \\
+BEST $-$ AVOID (tier gap) & $+0.375$ & $+0.422$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Team-level heterogeneity}
+
+Defensive suppression cost and counter availability vary substantially across teams. On the 2025--26 regular-season holdout, Figure~\ref{fig:team-quadrant} maps each team by suppression severity (mean first-to-second-half PPP drop on triggered play types) against unrealized counter gain (mean best-counter PPP minus second-half PPP on the suppressed action); bubble size encodes the share of games with at least one trigger. Teams cluster into four regimes---from high drop and high gain (hurt most, most room to improve via counter selection) to low drop and low gain---rather than collapsing onto a single league-wide pattern.
+
+Counter-selection quality and season outcomes are only weakly associated on the same holdout (Figure~\ref{fig:counter-win}). BEST-tier counter share and 2025--26 win percentage have Pearson $r = +0.25$ across all 30 teams; counter-selection quality explains little cross-sectional variance in winning. Playoff series-direction patterns tell the same story at a different granularity: New York (68.8 percent of triggers with no sufficient counter available; 41 percent win rate) and Denver (71.8 percent; 60 percent win rate) illustrate talent-compensation cases, against a counterexample in Indiana (18.6 percent best-counter follow rate; 71.4 percent win rate across seven series-directions). Teams with poor counter availability can still win, and disciplined counter-following does not guarantee success.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{suppression-quadrant}
+\caption{Team-level suppression severity versus unrealized counter gain (2025--26 regular-season holdout). Horizontal axis: mean H1$\to$H2 PPP drop on triggered play types. Vertical axis: mean best-counter PPP minus H2 PPP on the suppressed action (counter observations with $n\geq5$ in H2). Bubble area is proportional to the share of regular-season games with at least one suppression trigger. Red labels mark teams with AVOID-tier counter share above 15\%. Median lines partition the plane into four quadrants.}
+\label{fig:team-quadrant}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{talent-vs-process}
+\caption{Counter-selection quality versus season win rate (2025--26 regular-season holdout). Horizontal axis: share of counter possessions assigned BEST tier, averaged across triggers. Vertical axis: official NBA regular-season win percentage. Red markers: 2025--26 playoff teams ($n=16$); gray markers: non-playoff teams ($n=14$). Pearson $r = +0.25$; counter-selection quality explains little of the cross-sectional variance in winning.}
+\label{fig:counter-win}
+\end{figure}
+
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Synthesis}
+
+Three findings cohere into a single account of in-game offensive adaptation. First, defensive suppression is a real and measurable phenomenon rather than a statistical artifact: after matching triggered play types to same-game controls at comparable first-half efficiency and correcting for regression to the mean, garbage time, overtime, and within-game clustering, suppressed actions still lose roughly 0.41 PPP more into the second half than their controls. Second, offenses overwhelmingly fail to respond---they continue the suppressed play at near-undiminished volume in 93 percent of events, and even when a higher-scoring alternative already exists in the same game (95.3 percent of analyzed triggers), no team systematically reallocates toward it. Third, matchup-ranked same-game counters, validated out of sample, recover efficiency, with the best counter outperforming continuation by $+0.445$ PPP (playoffs) and $+0.584$ (regular season).
+
+Together these results imply that a large, recurring, and largely unaddressed efficiency loss exists in NBA offenses, and that the information needed to avoid it is present within the same game. The natural coaching implication is that recognizing defensive suppression earlier and reallocating away from the suppressed action would be valuable. This must be stated carefully: the counter comparisons are opportunity-cost differences measured on distinct possessions, not paired counterfactuals, and no team was observed executing a recommended pivot as a live intervention. The analysis establishes that continuation is costly and that better-scoring alternatives coexist with the suppressed play; it does not establish that a team switching to those alternatives would realize the observed counter efficiency against a defense already shown capable of adapting.
+
+This finding is consistent with, and helps reconcile, two strands of prior work that might otherwise seem in tension. A body of work tests whether basketball shot outcomes are statistically dependent on immediately preceding outcomes---a direct test of possession-to-possession or shot-to-shot memory (Wetzels et al.\ 2016; Chang 2019)---and generally finds such fine-grained sequential dependence to be weak, inconsistent across players, or absent once selection effects and model comparison are properly handled. Companion analyses on our own possession graph similarly find no surviving possession-to-possession dependence after multiple-comparison correction and matching. The suppression effect documented here operates at a coarser timescale: not possession-to-possession conditioning, but a half-level regime shift in a play type's efficiency. The two findings are compatible---a defense's adjustment need not manifest as local, possession-to-possession memory to produce a real, measurable, half-level decline.
+
+\subsection{What these results can and cannot establish}
+
+The analysis can detect defensive suppression events with their timing, quantify the cost of ignoring suppression at roughly 5.4 points per trigger, compare teams on their potential response given available counters, and flag talent-compensation cases where counter availability and outcomes diverge.
+
+Its scope limits are genuine, not rhetorical. Play types are inferred from public play-by-play rather than tracking or Synergy labels; population-level benchmark checks support plausibility but do not certify possession-level accuracy. It cannot determine whether pivoting is executable, because pivot recommendations are counterfactual rather than observed interventions. It cannot explain why a defense adapted: the underlying data contain no coverage labels, no defensive assignments, and no scheme tags, so the mechanism behind any given instance of defensive suppression is unidentified. It cannot make causal claims---every finding is associative by design. And it cannot identify executable counter identity below the play-type level; the recommendations operate on play types, not on the specific personnel actions a staff would ultimately call.
+
+\paragraph{Plausible defensive mechanisms (not identified in this data).}
+The matched-pair design establishes \emph{that} a play type's efficiency collapsed beyond regression to the mean; it does not establish \emph{how}. The notes below are coaching-level basketball knowledge about how defenses typically take away each of the six half-court play types in the suppression analysis (PNR, drive, post-up, spot-up, cut, pull-up). Putback and transition appear in the classifier taxonomy but are outside that analytic set. None of what follows is estimated, tested, or otherwise supported by the possession graph used here; coverage, assignment, and scheme labels are absent from the data. Readers should treat these as interpretive context only---plausible levers a staff might recognize on film, not findings of this paper.
+\begin{itemize}
+  \item \textbf{PNR.} Coverage change is the primary lever: teams often begin in drop or soft coverage, then tighten to a hedge, blitz/trap, or switch once a ball-handler--screener combination gets going. A blitz removes the ball-handler's airspace immediately off the screen; switching removes the size or speed mismatch the offense was hunting.
+  \item \textbf{Drive.} Defenses load the strong side---help defenders sagging off weaker shooters to wall off the paint---or assign a ``low man'' whose job is to step up on penetration. Personnel changes matter too: substituting a longer, more mobile wing defender specifically to contain one driver.
+  \item \textbf{Post-up.} Doubling from the top or the weak-side corner as soon as the ball enters the post forces a quick kick-out and can take the shot attempt away entirely. Fronting the post (denying the entry pass) is the other common lever, used more against pure back-to-basket scorers.
+  \item \textbf{Spot-up.} Rarely stoppable by scheme alone. Teams tighten closeouts, increase point-of-contact physicality on the catch, or specifically flag and top-lock/deny a single elite shooter so he never gets airspace.
+  \item \textbf{Cut.} Defenses ``tag'' cutters---a help defender briefly steps into the cutter's lane to disrupt timing---or switch off-ball screens more aggressively so the cutter's defender never loses him.
+  \item \textbf{Pull-up.} Defenders go over screens harder and closer, fighting through contact rather than going under, specifically to deny airspace for the jumper rather than conceding it as the lesser evil the way drop coverage often does against drives.
+\end{itemize}
+
+\subsection{Practical implications}
+
+For a coaching staff, the practical value follows from two facts established on the same footing: continuing the suppressed play is costly (roughly 5.4 points per trigger relative to its own first-half efficiency), and the underlying collapse is visible almost immediately---already present in the team's first five second-half attempts of that play type, not something that only emerges late. Better same-game alternatives coexist with the continued play ($+0.445$/$+0.584$ PPP counter gap). The immediate contribution is decision support at the moment of choice; whether a staff acting on the signal would realize the observed counter efficiency in practice remains the open question addressed in Section~\ref{sec:discussion}.
+
+\subsection{Future work}
+
+Companion analyses on the same possession graph investigate possession-to-possession sequence memory and state persistence, illustrating how the representation supports additional classes of basketball analytics beyond the suppression results presented here.
+
+Several questions follow directly from the present scope limits. First, whether the signal changes behavior when teams have access to it---the current analysis observes teams that did not use defensive suppression detection. Second, whether defensive suppression can be predicted before it begins, rather than detected only after it has already occurred. Third, whether the same counter-value comparisons hold when measured jointly, on the same events, as a single validated intervention rather than two separately scoped analyses. A fourth direction, implied by the mechanism gap, is incorporating coverage or assignment information, where obtainable, to move from detecting that defensive suppression occurred toward explaining why.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Defensive suppression of NBA play types is real net of regression to the mean: suppressed actions lose about 0.41 PPP more into the second half than matched same-game controls, an estimate robust to caliper choice, garbage-time exclusion, overtime handling, and game-level clustering. Offenses largely fail to adapt, continuing the suppressed play even when a superior alternative is already available, and ranked counters substantially outperform continuation. The contribution is the evidence---that the collapse is genuine, that stubbornness is near-universal, and that better options coexist in the same game---not the operational rule used to flag candidate events. Whether teams that act on the signal can convert it into realized efficiency is the central question we leave to future work.
+
+\section*{Data and Code Availability}
+\label{sec:data-availability}
+
+\textbf{Data.} All play-by-play used in this study is publicly available from the NBA Stats API (\texttt{stats.nba.com}), accessed through the open-source \texttt{nba\_api} Python package. No proprietary or licensed third-party tracking data were required. The analysis dataset consists of 863,752 possession records across 5,234 games (2022--23 through 2025--26, regular season and playoffs).
+
+\textbf{Code.} Replication code, frozen trigger tables, and figure sources are at \url{https://github.com/ramizheman/NBA-Defensive-Suppression}. Ingestion and classification code used to build those tables is available from the author on request.
+
+\textbf{Replication.} Full external replication proceeds in three stages: (1)~prefetch and cache raw API responses; (2)~build the possession-level dataset; (3)~run the analysis pipeline described in Section~3.7. The primary DiD specification requires only a flat possession table with game, team, play type, half, and points columns and does not require graph traversal. To reduce replication burden, possession-level exports, pre-computed holdout trigger tables, and result files for the primary matched-pair specification are available from the author on request.
+
+\section*{References}
+
+\begin{enumerate}
+\item Oliver, D. (2004). \emph{Basketball on Paper: Rules and Tools for Performance Analysis.} Potomac Books.
+\item Kubatko, J., Oliver, D., Pelton, K., \& Rosenbaum, D. T. (2007). ``A Starting Point for Analyzing Basketball Statistics.'' \emph{Journal of Quantitative Analysis in Sports}, 3(3).
+\item Sill, J. (2010). ``Improved NBA Adjusted $+/-$ Using Regularization and Out-of-Sample Testing.'' \emph{8th Annual MIT Sloan Sports Analytics Conference.}
+\item Cervone, D., D'Amour, A., Bornn, L., \& Goldsberry, K. (2014). ``POINTWISE: Predicting Points and Valuing Decisions in Real Time with NBA Optical Tracking Data.'' \emph{8th Annual MIT Sloan Sports Analytics Conference.}
+\item Cervone, D., D'Amour, A., Bornn, L., \& Goldsberry, K. (2016). ``A Multiresolution Stochastic Process Model for Predicting Basketball Possession Outcomes.'' \emph{Journal of the American Statistical Association}, 111(514), 585--599.
+\item Csap\'o, P., \& Raab, M. (2014). ``Hand Down, Man Down: Analysis of Defensive Adjustments in Response to the Hot Hand in Basketball Using Novel Defense Metrics.'' \emph{PLOS ONE}, 9(12), e114184.
+\item Kondur, A., \& Shen, W. (2026). ``Statistical Analysis of NBA Defensive Responses to Hot-Hand Effects.'' \emph{Journal of Sports Analytics}, 12(3). \url{https://doi.org/10.1177/22150218261458601}
+\item Skripnikov, A., Cemek, A., \& Gillman, D. (2026). ``Adjusting Expected Goals (xG) and Shots on Target for Game Context in Soccer.'' \emph{Journal of Sports Analytics}. \url{https://doi.org/10.1177/22150218261454824}
+\item Borrega-Solano, A., Lopez-Sierra, P., Campos-Redondo, A., \& Garcia-Rubio, J. (2026). ``How Teams Score May Matter More than How Often: Play-Type Efficiency, Usage, and Success in the NBA.'' \emph{Applied Sciences}, 16(11), 5342.
+\item Wetzels, R., Tutschkow, D., Dolan, C., van der Sluis, S., Dutilh, G., \& Wagenmakers, E.-J. (2016). ``A Bayesian Test for the Hot Hand Phenomenon.'' \emph{Journal of Mathematical Psychology}, 72, 200--209.
+\item Chang, J. C. (2019). ``Predictive Bayesian Selection of Multistep Markov Chains, Applied to the Detection of the Hot Hand and Other Statistical Dependencies in Free Throws.'' \emph{Royal Society Open Science}, 6(3), 182174.
+\end{enumerate}
+
+\end{document}
