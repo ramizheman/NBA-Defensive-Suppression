@@ -75,4 +75,4 @@ A researcher with the same cached play-by-play and classifier version will obtai
 
 ## License
 
-Paper © 2026 Rami Zheman. Code in this repository is provided for replication of the published estimates.
+Paper © 2026 Rami Zheman. Code is released under the MIT License; see [LICENSE](LICENSE) in the repository for details.
