@@ -1,0 +1,84 @@
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{times}
+\usepackage{amsmath,amssymb}
+\usepackage{setspace}
+\usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
+
+\pagestyle{empty}
+\setstretch{1.08}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+\newcommand{\abssection}[1]{\textbf{#1.}~}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries Suppressed but Unmoved:}\\[0.35em]
+{\large\bfseries Defensive Suppression and Failed Offensive Adaptation in the NBA}\\[1em]
+{\large Rami Zheman}\\[0.25em]
+{\normalsize\textit{Independent Sports Analytics Researcher}\\
+Alexandria, VA}
+\end{center}
+
+\vspace{0.6em}
+
+\abssection{Introduction}
+A coach watches a play that was working suddenly stop working.
+Execution? Random variation? Or has the defense taken it away?
+Coaches talk constantly about adjustments, yet NBA offenses rarely
+make them. More than nine times in ten, teams keep calling the same
+play at nearly the same rate after it breaks down. This paper argues
+that in many cases the defense has already won, and continuing the
+play is a costly mistake. This matters for the industry because if
+such collapses are real and go unaddressed, teams are forfeiting
+points in real time using information that is already sitting in
+front of them mid-game.
+
+\abssection{Methods}
+The analysis draws on 863{,}752 classified NBA possessions from the
+2022--23 through 2025--26 seasons (5{,}234 games), built from public
+play-by-play through the NBA Stats API, with a calibrated play-type
+classifier covering pick-and-roll, spot-up, drive, post-up, cut,
+pull-up, transition, and putback. A play type is flagged as a
+suppression trigger when a team's first-half points per possession
+exceeds its second-half figure by $0.25$ or more, with at least five
+possessions in each half. Because triggers are selected on an elevated
+first half, a raw before-and-after comparison conflates suppression
+with ordinary mean reversion. This is corrected with a same-game
+matched-pair design: each triggered play type is paired with the
+opposing team running the same play type in the same game, matched on
+first-half efficiency, with cluster-robust and permutation inference,
+plus caliper, blowout, and overtime-boundary robustness checks.
+
+\abssection{Results}
+Defensive suppression holds up net of regression to the mean, with
+matched pairs showing an excess decline of $0.408$ points per
+possession (95\% CI $0.378$ to $0.438$, $N = 1{,}136$ pairs across
+848 games, $p < 0.0002$), stable across every robustness check.
+Offenses largely fail to adapt: teams continue running the suppressed
+play in 93\% of events, at 97 to 98\% of prior volume, at a cost of
+roughly $5.4$ to $5.5$ points per trigger. Substituting the primary
+ball-handler does not recover efficiency (a negligible $0.039$ point
+difference). Even when a higher-scoring alternative already existed in
+the same game, true of 95.3\% of triggers, no team systematically
+reallocated toward it. Matchup-ranked counters, validated out of
+sample, outperform continuation by $0.445$ points per possession in
+the playoffs and $0.584$ in the regular season, while team-level
+suppression severity and unrealized counter value show only a weak
+relationship with win rate ($r = +0.25$).
+
+\abssection{Conclusion}
+Defensive suppression is a genuine, sizable, and largely unaddressed
+source of offensive inefficiency. Teams continue running actions the
+defense has already solved, even when better options are available in
+the same game, and a simple first-half signal can identify both the
+collapse and its remedy. This suggests a practical application for
+the industry: real-time tools that flag suppression as it happens and
+rank live counters. Whether teams acting on the signal can convert it
+into realized efficiency remains an open question for future work.
+
+\end{document}
