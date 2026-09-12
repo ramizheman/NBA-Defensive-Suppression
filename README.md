@@ -4,7 +4,7 @@ Replication materials for:
 
 **Zheman, R. (2026).** *Suppressed but Unmoved: Defensive Suppression and Failed Offensive Adaptation in the NBA.*
 
-Paper: [`suppression_paper.tex`](suppression_paper.tex) · Abstract: [`suppression_abstract.tex`](suppression_abstract.tex) · PDF: [`Detecting_Defensive_Suppression.pdf`](Detecting_Defensive_Suppression.pdf)
+Paper: [`suppression_paper.tex`](suppression_paper.tex) · [`Detecting_Defensive_Suppression.pdf`](Detecting_Defensive_Suppression.pdf) · Abstract: [`suppression_abstract.tex`](suppression_abstract.tex) · [`Detecting_Defensive_Suppression_Abstract.pdf`](Detecting_Defensive_Suppression_Abstract.pdf)
 
 This repository reproduces the paper's tables and figures from **frozen possession-summary and trigger tables**. It does not include the NBA Stats API ingestion stack or a graph database.
 
